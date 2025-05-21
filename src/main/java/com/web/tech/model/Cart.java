@@ -30,26 +30,15 @@ public class Cart {
         this.user = user;
     }
 
-    // Method to recalculate cart total
-    public void recalculateTotal() {
-        this.totalPrice = items.stream()
-                .map(item -> item.getProduct().getPrice().multiply(new BigDecimal(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    // Method to add product to cart
     public void addProduct(Products product, int quantity) {
-        // Check if product already in cart
         CartItem existingItem = items.stream()
                 .filter(item -> item.getProduct().getId().equals(product.getId()))
                 .findFirst()
                 .orElse(null);
 
         if (existingItem != null) {
-            // Increase quantity if product already in cart
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
         } else {
-            // Add new cart item if product not in cart
             CartItem newItem = new CartItem();
             newItem.setCart(this);
             newItem.setProduct(product);
@@ -57,9 +46,16 @@ public class Cart {
             items.add(newItem);
         }
 
-        // Recalculate cart total
         recalculateTotal();
     }
+
+    // Method to recalculate cart total
+    public void recalculateTotal() {
+        this.totalPrice = items.stream()
+                .map(item -> item.getProduct().getPrice().multiply(new BigDecimal(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
 
     // Method to remove product from cart
     public void removeProduct(Long productId) {
@@ -117,4 +113,6 @@ public class Cart {
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
     }
+
+
 }

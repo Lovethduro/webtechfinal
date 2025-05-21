@@ -38,7 +38,7 @@ public class UserController {
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
         model.addAttribute("user", new User());
-        return "register";
+        return "pages/register";
     }
 
     @PostMapping("/register")
@@ -89,7 +89,7 @@ public class UserController {
         }
 
         if (result.hasErrors()) {
-            return "register";
+            return "pages/register";
         }
 
         try {
@@ -111,7 +111,7 @@ public class UserController {
         } catch (IOException e) {
             result.rejectValue("profileImage", "error.user",
                     "Error processing profile image");
-            return "register";
+            return "pages/register";
         }
     }
 
@@ -124,4 +124,6 @@ public class UserController {
                         .body(userImage.getImageData()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+
 }

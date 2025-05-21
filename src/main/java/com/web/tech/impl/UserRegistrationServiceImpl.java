@@ -18,15 +18,15 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
     private static final Logger logger = LoggerFactory.getLogger(UserRegistrationServiceImpl.class);
     private final UserRepository userRepository;
     private final UserImageRepository userImageRepository;
-    private final PasswordEncoder passwordEncoder;
+
 
     // Explicit constructor for dependency injection
     public UserRegistrationServiceImpl(UserRepository userRepository,
-                                       UserImageRepository userImageRepository,
-                                       PasswordEncoder passwordEncoder) {
+                                       UserImageRepository userImageRepository
+                                       ) {
         this.userRepository = userRepository;
         this.userImageRepository = userImageRepository;
-        this.passwordEncoder = passwordEncoder;
+
     }
 
     @Override
@@ -34,9 +34,7 @@ public class UserRegistrationServiceImpl implements UserRegistrationService {
     public User registerUser(User user, MultipartFile profileImage) throws IOException {
         logger.debug("Starting user registration...");
 
-        // 1. Save user
-        logger.debug("Encoding password...");
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
 
         logger.debug("Saving user to database...");
         User savedUser = userRepository.save(user);

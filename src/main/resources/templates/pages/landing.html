@@ -21,22 +21,23 @@
             position: relative;
             background: black;
             font-family: 'Roboto', sans-serif;
+            overflow-x: hidden;
         }
 
         header {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 30px 100px;
+            padding: 20px 30px;
             z-index: 1000;
         }
 
         .logo {
             font-family: 'Great Vibes', cursive;
-            font-size: 3em;
+            font-size: clamp(2em, 5vw, 2.5em);
             color: white;
             letter-spacing: 2px;
             font-weight: 800;
@@ -133,14 +134,14 @@
             left: 0;
             width: 100%;
             height: 100vh !important;
-            padding: 0 100px;
+            padding: 80px 20px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             overflow: hidden;
             transition: 0.5s;
             background: black;
-            perspective: 1000px;
+            perspective: 800px;
             transform-style: preserve-3d;
             z-index: 800;
         }
@@ -162,6 +163,10 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            padding-left: 50px;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent background for contrast */
+            border-radius: 10px;
+            z-index: 15;
         }
 
         .banner .content h1 {
@@ -252,6 +257,7 @@
             box-shadow: 0 0 white;
             -webkit-box-reflect: below 10px linear-gradient(transparent, transparent, #0005);
             cursor: pointer;
+            z-index: 10;
         }
 
         #drag-container img:hover {
@@ -265,7 +271,7 @@
             line-height: 1em;
             text-align: center;
             position: absolute;
-            top: 100%;
+            top: 110%;
             left: 50%;
             transform: translate(-50%, -50%) rotateX(90deg);
         }
@@ -725,24 +731,141 @@ header .nav li .content-btn:hover {
         font-size: 0.8em;
     }
 }
+
+        @media (max-width: 992px) {
+            .banner {
+                padding: 0 30px;
+            }
+            .banner .content {
+                padding-left: 20px;
+                margin-right: 20px; /* Prevent text from touching carousel */
+            }
+        }
+        @media (max-width: 768px) {
+            .banner .content {
+                padding: 20px;
+                background: rgba(0, 0, 0, 0.7); /* Stronger background on mobile */
+                margin-bottom: 20px; /* Space above carousel */
+            }
+            .banner .content h1 {
+                font-size: 2em;
+            }
+            .banner .content h4 {
+                font-size: 1.5em;
+            }
+            .banner .content p {
+                font-size: 0.9em;
+            }
+            .banner .content .content-btn {
+                width: 150px;
+                padding: 8px 20px;
+            }
+            #drag-container {
+                margin-top: 20px; /* Shift carousel down on mobile */
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+            }
+            .nav {
+                display: none; /* Hide by default */
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.9);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+            .nav.active {
+                display: flex; /* Show when toggled */
+            }
+            .nav li {
+                margin: 15px 0;
+            }
+            .nav li a {
+                font-size: 1.2em;
+                padding: 10px;
+            }
+            .bag {
+                font-size: 1.3em;
+                width: 35px;
+                height: 35px;
+            }
+            .bag .number {
+                width: 14px;
+                height: 14px;
+                font-size: 0.5em;
+            }
+            .menu {
+                display: block; /* Show hamburger menu */
+            }
+            .banner {
+                padding: 60px 15px 15px;
+                flex-direction: column;
+            }
+            .banner .content {
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            #drag-container {
+                margin-top: 10px;
+            }
+            .exhibition .row.g-4 {
+                flex-direction: column;
+                align-items: center;
+            }
+            .exhibition-img {
+                max-height: 150px;
+            }
+            .spotlight-item {
+                margin-bottom: 15px;
+            }
+        }
+        @media (max-width: 576px) {
+            .logo {
+                font-size: 2em;
+            }
+            .banner .content h1 {
+                font-size: 1.5em;
+            }
+            .banner .content h4 {
+                font-size: 1.2em;
+            }
+            .banner .content p {
+                font-size: 0.8em;
+            }
+            .banner .content .content-btn {
+                min-width: 120px;
+                padding: 6px 15px;
+            }
+            #drag-container h1 {
+                font-size: 2em;
+            }
+            .exhibition-title h1,
+            .spotlight-title h1 {
+                font-size: 2em;
+            }
+        }
     </style>
 </head>
 <body>
 <header>
-    <a th:href="@{/landing}" class="logo">Museum</a>
+    <a th:href="@{/landing}" class="logo">Art Gallery</a>
     <ul class="nav">
         <li>
             <a class="nav-btn active" th:href="@{#}" data-target="home"><ion-icon name="home-outline"></ion-icon></a>
         </li>
         <li><a class="nav-btn" th:href="@{#}" data-target="exhibition">Exhibitions</a></li>
         <li><a class="nav-btn" th:href="@{#}" data-target="collection">Collection</a></li>
-        <li><a class="nav-btn" th:href="@{#}" data-target="shop">Shop</a></li>
         <li><a class="content-btn" th:href="@{/login}">Login</a></li>
         <li><a class="content-btn" th:href="@{/register}">Register</a></li>
-        <a th:href="@{#}" class="bag">
-            <ion-icon name="bag-outline"></ion-icon>
-            <span class="number">5</span>
-        </a>
+
         <a th:href="@{#}" class="menu">
             <ion-icon name="grid-outline"></ion-icon>
         </a>
@@ -753,10 +876,10 @@ header .nav li .content-btn:hover {
     <div class="row d-flex align-items-center">
         <div class="col-lg-5 col-md-12">
             <div class="content">
-                <h1>Museum</h1>
-                <h4>Welcome to Art Museum</h4>
-                <p>Explore our collection of fine art and exhibitions</p>
-                <a class="content-btn" th:href="@{#}">book exhibition</a>
+                <h1>Art Gallery</h1>
+                <h4>Welcome to Art Gallery</h4>
+                <p>View and purchase our collection of fine art and exhibitions</p>
+                <a class="content-btn" th:href="@{/login}">Shop Now!</a>
             </div>
         </div>
         <div class="col-lg-7 col-md-12">
@@ -802,7 +925,7 @@ header .nav li .content-btn:hover {
                                     of autumn through impressionist techniques. Each brushstroke captures the
                                     delicate interplay of light through falling leaves.
                                 </p>
-                                <h4 class="text-primary mb-4">$72.00</h4>
+
                             </div>
                         </div>
                     </div>
@@ -824,7 +947,6 @@ header .nav li .content-btn:hover {
                                     traditional Greek forms with contemporary materials. The piece examines the
                                     dialogue between ancient wisdom and modern sensibilities.
                                 </p>
-                                <h4 class="text-primary mb-4">$72.00</h4>
                             </div>
                         </div>
                     </div>
@@ -846,7 +968,7 @@ header .nav li .content-btn:hover {
                                     between architecture and humanity in major metropolitan centers. Her lens
                                     captures fleeting moments of connection in urban isolation.
                                 </p>
-                                <h4 class="text-primary mb-4">$72.00</h4>
+
                             </div>
                         </div>
                     </div>
@@ -868,7 +990,7 @@ header .nav li .content-btn:hover {
                                     the boundary between reality and imagination. These dreamlike scenes
                                     invite viewers to lose themselves in misty mountains and impossible horizons.
                                 </p>
-                                <h4 class="text-primary mb-4">$72.00</h4>
+
                             </div>
                         </div>
                     </div>
@@ -1027,6 +1149,8 @@ header .nav li .content-btn:hover {
 <script th:src="@{/js/swiper.js}" src="/js/swiper.js"></script>
 
 <script>
+
+
     // Debugging wrapper to catch errors
     try {
         // Swiper initialization
@@ -1109,11 +1233,11 @@ header .nav li .content-btn:hover {
         });
 
         // Carousel logic
-        var radius = screen.width < 768 ? 145 : 390;
+        var radius = screen.width < 768 ? 120 : 300;
         var autoRotate = true;
         var rotateSpeed = -60;
-        var imgWidth = screen.width < 768 ? 120 : 324;
-        var imgHeight = screen.width < 768 ? 170 : 459;
+        var imgWidth = screen.width < 768 ? 100 : 270;
+        var imgHeight = screen.width < 768 ? 140 : 380;
         var currentZoom = 1;
         var maxZoom = 2;
         var minZoom = 0.5;

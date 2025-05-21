@@ -2,6 +2,10 @@ package com.web.tech.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +33,7 @@ public class User {
     @Column(name = "email", unique = true)
     private String email;
 
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$",
-            message = "Password must be 8-20 chars with at least one digit, lowercase, uppercase, and special character")
+
     @NotBlank(message = "Password is required")
     @Column(name = "password")
     private String password;
@@ -66,6 +69,12 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Orders> orders = new ArrayList<>();
 
+    @Column(name = "ordercount", columnDefinition = "INTEGER DEFAULT 0")
+    private Integer orderCount;
+
+    @Column(name = "totalspent", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private BigDecimal totalSpent;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -96,7 +105,7 @@ public class User {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = email != null ? email.toLowerCase().trim() : null;
     }
 
     public String getPassword() {
@@ -177,5 +186,30 @@ public class User {
 
     public void setOrders(List<Orders> orders) {
         this.orders = orders;
+    }
+
+
+    public Integer getOrderCount() {
+        return orderCount;
+    }
+
+    public void setOrderCount(Integer orderCount) {
+        this.orderCount = orderCount;
+    }
+
+    public BigDecimal getTotalSpent() {
+        return totalSpent;
+    }
+
+    public void setTotalSpent(BigDecimal totalSpent) {
+        this.totalSpent = totalSpent;
+    }
+
+    public String getProfilePicture() {
+        return profileImageId; // Return profileImageId as the profile picture
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profileImageId = profilePicture; // Update profileImageId
     }
 }

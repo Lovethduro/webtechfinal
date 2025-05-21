@@ -9,6 +9,10 @@ public interface UserImageService {
     UserImage saveImage(String userId, MultipartFile file) throws IOException;
     Optional<UserImage> getImage(String userId);
     void deleteImage(String userId);
-
+    String getProfileImageBase64(String userId);
+    String getProfileImageContentType(String userId);
     Optional<UserImage> getImageByUserId(String userId);
+    UserImage updateImage(String userId, MultipartFile file) throws IOException;
+    String getProfileImageBase64(Long userId);
+    String getProfileImageContentType(Long userId);
 }
