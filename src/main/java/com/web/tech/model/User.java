@@ -5,15 +5,18 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "clients")
-public class User {
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
-    private String id; // Use String for MongoDB ObjectId
+    private String id; // MongoDB ObjectId as String
 
     @NotBlank(message = "First name is required")
     @Size(max = 50, message = "First name must be less than 50 characters")
@@ -47,11 +50,25 @@ public class User {
     @Indexed(unique = true)
     private String phone;
 
-    private List<Orders> orders = new ArrayList<>();
+    // Note: Orders list should be handled carefully for serialization
+    // Consider storing only order IDs instead of full Order objects
+    private List<String> orderIds = new ArrayList<>(); // Changed from Orders to String IDs
 
     private Integer orderCount = 0;
 
     private BigDecimal totalSpent = BigDecimal.ZERO;
+
+    // Default constructor
+    public User() {}
+
+    // Constructor for essential fields
+    public User(String firstName, String lastName, String email, String password, String role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email != null ? email.toLowerCase().trim() : null;
+        this.password = password;
+        this.role = role != null ? role : "USER";
+    }
 
     // Getters and Setters
     public String getId() {
@@ -150,12 +167,25 @@ public class User {
         this.phone = phone;
     }
 
-    public List<Orders> getOrders() {
-        return orders;
+    public List<String> getOrderIds() {
+        return orderIds;
     }
 
+    public void setOrderIds(List<String> orderIds) {
+        this.orderIds = orderIds != null ? orderIds : new ArrayList<>();
+    }
+
+    // Backward compatibility - you may need to update references to this method
+    @Deprecated
+    public List<Orders> getOrders() {
+        // Return empty list or implement logic to fetch Orders by IDs
+        return new ArrayList<>();
+    }
+
+    @Deprecated
     public void setOrders(List<Orders> orders) {
-        this.orders = orders;
+        // Convert Orders to IDs if needed
+        // This method should be updated based on your Orders entity structure
     }
 
     public Integer getOrderCount() {
@@ -180,5 +210,19 @@ public class User {
 
     public void setProfilePicture(String profilePicture) {
         this.profileImageId = profilePicture;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", email='" + email + '\'' +
+                ", role='" + role + '\'' +
+                ", phone='" + phone + '\'' +
+                ", orderCount=" + orderCount +
+                ", totalSpent=" + totalSpent +
+                '}';
     }
 }

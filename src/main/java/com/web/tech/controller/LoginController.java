@@ -21,6 +21,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class LoginController {
@@ -38,7 +40,7 @@ public class LoginController {
     public String showLoginPage(Model model, HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session != null) {
-            session.removeAttribute("user");
+            session.removeAttribute("userInfo");
             session.removeAttribute("SPRING_SECURITY_CONTEXT");
             try {
                 session.invalidate();
@@ -69,7 +71,16 @@ public class LoginController {
 
         try {
             String normalizedEmail = email.toLowerCase().trim();
-            User user = userService.findByEmail(normalizedEmail);
+
+            // Add database connection error handling
+            User user;
+            try {
+                user = userService.findByEmail(normalizedEmail);
+            } catch (Exception dbException) {
+                System.err.println("Database connection error: " + dbException.getMessage());
+                redirectAttributes.addFlashAttribute("errorMessage", "Service temporarily unavailable. Please try again later.");
+                return "redirect:/login?error=true";
+            }
 
             if (user == null) {
                 System.out.println("User not found for email: " + normalizedEmail);
@@ -100,30 +111,35 @@ public class LoginController {
             System.out.println("Security context authenticated: " + authentication.isAuthenticated());
             System.out.println("Security context authorities: " + authentication.getAuthorities());
 
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                session.invalidate();
-            }
-            session = request.getSession(true);
+            // Get or create session
+            HttpSession session = request.getSession(true);
 
-            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+            // Store user information as serializable primitives (not MongoDB documents)
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("role", userRole);
+            userInfo.put("firstName", user.getFirstName());
+            userInfo.put("lastName", user.getLastName());
+            userInfo.put("phone", user.getPhone());
+            userInfo.put("address", user.getAddress());
+            userInfo.put("city", user.getCity());
+            userInfo.put("zipCode", user.getZipCode());
 
-            User sessionUser = new User();
-            sessionUser.setId(user.getId());
-            sessionUser.setEmail(user.getEmail());
-            sessionUser.setRole(userRole);
-            sessionUser.setFirstName(user.getFirstName());
-            sessionUser.setLastName(user.getLastName());
-
-            session.setAttribute("user", sessionUser);
+            session.setAttribute("userInfo", userInfo);
             session.setAttribute("authenticated", true);
 
-            System.out.println("Session user role set to: " + sessionUser.getRole());
-            System.out.println("Redirecting to /admin for user: " + normalizedEmail);
+            // Store the security context
+            session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
+
+            System.out.println("Session user role set to: " + userRole);
+            System.out.println("Redirecting for user: " + normalizedEmail);
 
             if ("ADMIN".equalsIgnoreCase(userRole)) {
+                System.out.println("Redirecting to /admin");
                 return "redirect:/admin";
             } else {
+                System.out.println("Redirecting to /shop");
                 return "redirect:/shop";
             }
 
@@ -134,7 +150,7 @@ public class LoginController {
         } catch (Exception e) {
             System.out.println("Unexpected error during login: " + e.getMessage());
             e.printStackTrace();
-            redirectAttributes.addFlashAttribute("errorMessage", "Unexpected error");
+            redirectAttributes.addFlashAttribute("errorMessage", "Service temporarily unavailable");
             return "redirect:/login?error=true";
         }
     }
