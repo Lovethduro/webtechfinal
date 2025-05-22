@@ -4,6 +4,7 @@ import com.web.tech.model.CustomUserDetails;
 import com.web.tech.model.User;
 import com.web.tech.repository.UserRepository;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,8 +22,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        return new CustomUserDetails(user);
+        try {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+            return new CustomUserDetails(user);
+        } catch (DataAccessResourceFailureException e) {
+            throw new UsernameNotFoundException("Database connection failed", e);
+        }
     }
 }
