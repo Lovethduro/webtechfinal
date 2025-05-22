@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -61,42 +62,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Add filters in correct order
                 .addFilterBefore(loginPageFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // Disable caching for all responses
                 .headers(headers -> headers
                         .cacheControl(cache -> cache.disable())
                         .frameOptions(frame -> frame.sameOrigin())
                 )
-
-                // Configure session management
                 .sessionManagement(session -> session
                         .sessionFixation().migrateSession()
                         .maximumSessions(1)
                         .sessionRegistry(sessionRegistry())
                 )
-
-                // Disable CSRF for custom login
                 .csrf(csrf -> csrf.disable())
-
-                // Authorization configuration
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/", "/home", "/css/**", "/js/**", "/images/**",
                                 "/landing", "/register", "/login", "/exhibitions",
                                 "/collection", "/error/**", "/test", "/forgot-password", "/reset-password"
                         ).permitAll()
-                        .requestMatchers("/admin/products/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/user/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
-
-                // Disable form login
                 .formLogin(form -> form.disable())
-
-                // Logout configuration
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                         .logoutSuccessUrl("/login?logout")
@@ -106,8 +94,6 @@ public class SecurityConfig {
                         .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll()
                 )
-
-                // Exception handling
                 .exceptionHandling(ex -> ex
                         .accessDeniedPage("/access-denied")
                 );
@@ -123,8 +109,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Using NoOpPasswordEncoder as requested (not recommended for production)
-        return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+        return NoOpPasswordEncoder.getInstance(); // Plain text passwords (not secure for production)
     }
 
     @Bean

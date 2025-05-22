@@ -4,9 +4,9 @@ import com.web.tech.model.Cart;
 import com.web.tech.model.Products;
 
 public interface CartService {
-    Cart getOrCreateCart(Long userId);
-    void addToCart(Long userId, Long productId, int quantity);
-    long getCartCount(Long userId);
-    void clearCart(Long userId);
+    Cart getOrCreateCart(String userId);
+    void addToCart(String userId, String productId, int quantity);
+    long getCartCount(String userId);
+    void clearCart(String userId);
     void saveCart(Cart cart);
 }

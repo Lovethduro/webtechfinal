@@ -1,29 +1,26 @@
 package com.web.tech.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "carts")
+@Document(collection = "carts")
 public class Cart {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @DBRef
     private User user;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
 
-    @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice = BigDecimal.ZERO;
 
-    // Constructor
     public Cart() {}
 
     public Cart(User user) {
@@ -40,7 +37,6 @@ public class Cart {
             existingItem.setQuantity(existingItem.getQuantity() + quantity);
         } else {
             CartItem newItem = new CartItem();
-            newItem.setCart(this);
             newItem.setProduct(product);
             newItem.setQuantity(quantity);
             items.add(newItem);
@@ -49,22 +45,18 @@ public class Cart {
         recalculateTotal();
     }
 
-    // Method to recalculate cart total
     public void recalculateTotal() {
         this.totalPrice = items.stream()
                 .map(item -> item.getProduct().getPrice().multiply(new BigDecimal(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-
-    // Method to remove product from cart
-    public void removeProduct(Long productId) {
+    public void removeProduct(String productId) {
         items.removeIf(item -> item.getProduct().getId().equals(productId));
         recalculateTotal();
     }
 
-    // Method to update product quantity
-    public void updateProductQuantity(Long productId, int quantity) {
+    public void updateProductQuantity(String productId, int quantity) {
         items.stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst()
@@ -74,45 +66,21 @@ public class Cart {
                 });
     }
 
-    // Method to clear cart
     public void clear() {
         items.clear();
         totalPrice = BigDecimal.ZERO;
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public List<CartItem> getItems() {
-        return items;
-    }
-
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public List<CartItem> getItems() { return items; }
     public void setItems(List<CartItem> items) {
         this.items = items;
         recalculateTotal();
     }
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(BigDecimal totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
 }

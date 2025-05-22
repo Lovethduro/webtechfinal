@@ -1,7 +1,7 @@
 package com.web.tech.service;
 
-import com.web.tech.model.Clients;
 import com.web.tech.model.Products;
+import com.web.tech.model.User;
 import com.web.tech.repository.ProductRepository;
 import com.web.tech.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +19,6 @@ import java.util.stream.Collectors;
 @Service
 public class ProductService {
 
-    public Optional<Products> getProductById(Long id) {
-        return productRepository.findById(id);
-    }
-
     @Autowired
     private ProductRepository productRepository;
 
@@ -35,14 +31,22 @@ public class ProductService {
     @Autowired
     private UserRepository userRepository;
 
+    public Optional<Products> getProductById(String id) {
+        return productRepository.findById(id);
+    }
 
     public void saveProduct(Products product, MultipartFile image) throws IOException {
-        // Save product to PostgreSQL
+        if (product.getId() == null) {
+            product.onCreate();
+        } else {
+            product.onUpdate();
+        }
         product = productRepository.save(product);
-        // Save image to MongoDB
         if (image != null && !image.isEmpty()) {
             System.out.println("Saving image for product ID: " + product.getId());
-            productImageService.saveImage(String.valueOf(product.getId()), image);
+            productImageService.saveImage(product.getId(), image);
+            product.setImageId(product.getId());
+            productRepository.save(product);
         } else {
             System.err.println("No image provided for product ID: " + product.getId());
         }
@@ -53,18 +57,15 @@ public class ProductService {
     }
 
     public List<Products> searchProducts(String name, Double minPrice, Double maxPrice) {
-        // Convert Double to BigDecimal for database operations
         BigDecimal min = minPrice != null ? BigDecimal.valueOf(minPrice) : null;
         BigDecimal max = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
 
-        // Validate price range if both are provided
         if (min != null && max != null) {
             if (min.compareTo(max) > 0) {
                 throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
             }
         }
 
-        // Perform appropriate search based on provided parameters
         if (name != null && !name.trim().isEmpty() && min != null && max != null) {
             return productRepository.findByNameContainingIgnoreCaseAndPriceBetween(
                     name.trim(), min, max);
@@ -74,7 +75,6 @@ public class ProductService {
             return productRepository.findByPriceBetween(min, max);
         }
 
-        // If no search criteria provided, return all products
         return getAllProducts();
     }
 
@@ -83,23 +83,19 @@ public class ProductService {
     }
 
     public Page<Products> searchProducts(String name, Double minPrice, Double maxPrice, Pageable pageable) {
-        // Validate name
         if (name != null && name.trim().isEmpty()) {
             throw new IllegalArgumentException("Search name cannot be empty");
         }
 
-        // Convert Double to BigDecimal for database operations
         BigDecimal min = minPrice != null ? BigDecimal.valueOf(minPrice) : null;
         BigDecimal max = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
 
-        // Validate price range if both are provided
         if (min != null && max != null) {
             if (min.compareTo(max) > 0) {
                 throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
             }
         }
 
-        // Perform appropriate search based on provided parameters
         if (name != null && !name.trim().isEmpty() && min != null && max != null) {
             return productRepository.findByNameContainingIgnoreCaseAndPriceBetween(
                     name.trim(), min, max, pageable);
@@ -109,38 +105,29 @@ public class ProductService {
             return productRepository.findByPriceBetween(min, max, pageable);
         }
 
-        // If no search criteria provided, return all products
         return productRepository.findAll(pageable);
-
-
     }
 
-    public void deleteProduct(Long id) {
+    public void deleteProduct(String id) {
         Optional<Products> productOptional = productRepository.findById(id);
         if (!productOptional.isPresent()) {
             throw new IllegalArgumentException("Product with ID " + id + " not found");
         }
 
         productRepository.deleteById(id);
-
-        String imageDeletionError = null;
         try {
-            productImageService.deleteImage(String.valueOf(id));
+            productImageService.deleteImage(id);
         } catch (IOException e) {
-            imageDeletionError = "Product deleted, but failed to delete associated image: " + e.getMessage();
-        }
-
-        if (imageDeletionError != null) {
-            throw new IllegalStateException(imageDeletionError);
+            throw new IllegalStateException("Product deleted, but failed to delete associated image: " + e.getMessage());
         }
     }
 
-    public List<Clients> getAllClients() {
-        return clientRepository.findAll();
+    public List<User> getAllClients() {
+        return userRepository.findAll();
     }
 
     public Long countAllArtworks() {
-        return productRepository.count(); // Fixed: Use productRepository instead of artworkRepository
+        return productRepository.count();
     }
 
     public Long countAllClients() {
@@ -160,26 +147,27 @@ public class ProductService {
         return productImageService.getProductImageContentType(productId);
     }
 
-
-    public String getProductImage(Long productId) {
+    public String getProductImage(String productId) {
         String image = productImageService.getProductImage(productId);
         return image != null ? image : "/images/default-product.jpg";
     }
 
     public Map<String, Long> getArtworksByCategory() {
-        List<Object[]> results = productRepository.getArtworksByCategory();
-        Map<String, Long> categoryCounts = new LinkedHashMap<>();
-        for (Object[] result : results) {
-            String category = (String) result[0];
-            Long count = ((Number) result[1]).longValue();
-            categoryCounts.put(category, count);
-        }
-        return categoryCounts;
+        List<Products> products = productRepository.findAll();
+        Map<String, Long> categoryCounts = products.stream()
+                .filter(p -> p.getCategory() != null)
+                .collect(Collectors.groupingBy(
+                        Products::getCategory,
+                        Collectors.counting()
+                ));
+        return new LinkedHashMap<>(categoryCounts);
     }
 
     public void updateProduct(Products product) {
+        if (product.getId() != null) {
+            product.onUpdate();
+        }
         productRepository.save(product);
-
     }
 
     public Long countOutOfStock() {
@@ -189,6 +177,4 @@ public class ProductService {
     public Page<Products> findAll(Pageable pageable) {
         return productRepository.findAll(pageable);
     }
-
-
 }

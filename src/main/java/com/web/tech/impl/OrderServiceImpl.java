@@ -14,16 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.LinkedHashMap;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -35,17 +34,16 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @PostConstruct
     public void init() {
         fixNullOrderDates();
     }
 
-    @Autowired
-    private NotificationService notificationService;
-
     @Override
-    @Transactional
-    public Orders createOrder(Long userId, Cart cart, String shippingAddress, String paymentMethod) {
+    public Orders createOrder(String userId, Cart cart, String shippingAddress, String paymentMethod) {
         if (cart == null || cart.getItems().isEmpty()) {
             throw new IllegalArgumentException("Cart is empty");
         }
@@ -55,17 +53,15 @@ public class OrderServiceImpl implements OrderService {
         Orders order = Orders.createFromCart(cart, shippingAddress, paymentMethod);
         order.setUser(user);
         if (order.getOrderDate() == null) {
-            order.setOrderDate(java.time.LocalDateTime.now()); // Set orderDate to current timestamp
+            order.setOrderDate(LocalDateTime.now());
         }
         order = orderRepository.save(order);
-        order = orderRepository.save(order);
 
-        // Update user's orderCount and totalSpent
+        user.getOrders().add(order);
         user.setOrderCount(user.getOrderCount() + 1);
         user.setTotalSpent(user.getTotalSpent().add(order.getTotalAmount()));
         userService.save(user);
 
-        // Create notification for order creation
         String title = "Order Placed";
         String message = String.format("Your order #%s has been successfully placed.", order.getOrderNumber());
         notificationService.createNotification(title, message, "SUCCESS", user);
@@ -75,8 +71,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
-    public void cancelOrder(String orderNumber, Long userId) {
+    public void cancelOrder(String orderNumber, String userId) {
         Orders order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
         if (!order.getUser().getId().equals(userId)) {
@@ -88,13 +83,11 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus("CANCELLED");
         orderRepository.save(order);
 
-        // Decrement orderCount and subtract totalAmount from totalSpent
         User user = order.getUser();
         user.setOrderCount(user.getOrderCount() - 1);
         user.setTotalSpent(user.getTotalSpent().subtract(order.getTotalAmount()));
         userService.save(user);
 
-        // Create notification for order cancellation
         String title = "Order Cancelled";
         String message = String.format("Your order #%s has been cancelled.", order.getOrderNumber());
         notificationService.createNotification(title, message, "INFO", user);
@@ -102,7 +95,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public BigDecimal getTotalSpent(Long userId) {
+    public BigDecimal getTotalSpent(String userId) {
         return userService.getUserById(userId)
                 .map(User::getTotalSpent)
                 .orElse(BigDecimal.ZERO);
@@ -132,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Orders findById(Long id) {
+    public Orders findById(String id) {
         return orderRepository.findById(id).orElse(null);
     }
 
@@ -142,8 +135,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
-    public void updateOrderStatus(Long orderId, String status) {
+    public void updateOrderStatus(String orderId, String status) {
         Orders order = findById(orderId);
         if (order == null) {
             throw new IllegalArgumentException("Order not found.");
@@ -151,11 +143,10 @@ public class OrderServiceImpl implements OrderService {
         if (!isValidStatus(status)) {
             throw new IllegalArgumentException("Invalid status: " + status);
         }
-        if (!order.getStatus().equals(status)) { // Only create notification if status changes
+        if (!order.getStatus().equals(status)) {
             order.setStatus(status);
             order.setLastUpdated(LocalDateTime.now());
             orderRepository.save(order);
-            // Create notification for user
             User user = order.getUser();
             String title = "Order Status Updated";
             String message = String.format("Your order #%s has been updated to %s.", order.getOrderNumber(), status);
@@ -176,11 +167,10 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    public List<Orders> getOrdersByUserId(Long userId) {
+    public List<Orders> getOrdersByUserId(String userId) {
         return orderRepository.findByUserId(userId);
     }
 
-    @Transactional
     public void fixNullOrderDates() {
         List<Orders> orders = orderRepository.findAll();
         for (Orders order : orders) {

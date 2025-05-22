@@ -1,17 +1,17 @@
 package com.web.tech.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "products")
+@Document(collection = "products")
 public class Products {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @NotBlank(message = "Artwork title is required")
     @Size(max = 255, message = "Artwork title must not exceed 255 characters")
@@ -46,27 +46,23 @@ public class Products {
 
     private String imageId;
 
-    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @PrePersist
-    protected void onCreate() {
+    public void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
-    @PreUpdate
-    protected void onUpdate() {
+    public void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getIdAsString() {
-        return id != null ? id.toString() : null;
+        return id;
     }
 
     public String getName() { return name; }

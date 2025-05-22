@@ -65,7 +65,6 @@ public class NotificationController {
         model.addAttribute("unreadCount", unreadCount);
         model.addAttribute("cartCount", cartService.getCartCount(user.getId()));
 
-        // Fetch profile image as base64
         String profileImageBase64 = userImageService.getProfileImageBase64(user.getId());
         String contentType = userImageService.getProfileImageContentType(user.getId());
         if (profileImageBase64 != null) {
@@ -101,7 +100,7 @@ public class NotificationController {
     }
 
     @PostMapping("/notifications/mark-read")
-    public String markNotificationRead(@RequestParam("notificationId") Long notificationId) {
+    public String markNotificationRead(@RequestParam("notificationId") String notificationId) {
         logger.debug("Marking notification as read: {}", notificationId);
         notificationService.markAsRead(notificationId);
         return "redirect:/notifications";

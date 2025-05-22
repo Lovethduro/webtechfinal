@@ -1,86 +1,64 @@
 package com.web.tech.model;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "clients")
+@Document(collection = "clients")
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    private String id; // Use String for MongoDB ObjectId
 
     @NotBlank(message = "First name is required")
     @Size(max = 50, message = "First name must be less than 50 characters")
-    @Column(name = "first_name")
     private String firstName;
 
     @NotBlank(message = "Last name is required")
     @Size(max = 50, message = "Last name must be less than 50 characters")
-    @Column(name = "last_name")
     private String lastName;
 
     @NotBlank(message = "Email is required")
     @Email(message = "Please provide a valid email")
-    @Column(name = "email", unique = true)
+    @Indexed(unique = true)
     private String email;
 
-
     @NotBlank(message = "Password is required")
-    @Column(name = "password")
     private String password;
 
-    @Transient
     private String confirmPassword;
 
-    @Column(name = "profile_image_id")
     private String profileImageId;
 
-    // Added role for authentication
-    @Column(name = "role", nullable = false)
     private String role = "USER"; // Default role
 
-    // Added address fields for shipping
-    @Column(name = "address")
     private String address;
 
-    @Column(name = "city")
     private String city;
 
-    @Column(name = "zip_code")
     private String zipCode;
 
-    @Column(unique = true)
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Invalid phone number format")
+    @Indexed(unique = true)
     private String phone;
 
-    // Relationships
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Cart cart;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Orders> orders = new ArrayList<>();
 
-    @Column(name = "ordercount", columnDefinition = "INTEGER DEFAULT 0")
-    private Integer orderCount;
+    private Integer orderCount = 0;
 
-    @Column(name = "totalspent", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
-    private BigDecimal totalSpent;
+    private BigDecimal totalSpent = BigDecimal.ZERO;
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -124,12 +102,12 @@ public class User {
         this.confirmPassword = confirmPassword;
     }
 
-    public void setProfileImageId(String profileImageId) {
-        this.profileImageId = profileImageId;
-    }
-
     public String getProfileImageId() {
         return profileImageId;
+    }
+
+    public void setProfileImageId(String profileImageId) {
+        this.profileImageId = profileImageId;
     }
 
     public String getRole() {
@@ -172,14 +150,6 @@ public class User {
         this.phone = phone;
     }
 
-    public Cart getCart() {
-        return cart;
-    }
-
-    public void setCart(Cart cart) {
-        this.cart = cart;
-    }
-
     public List<Orders> getOrders() {
         return orders;
     }
@@ -187,7 +157,6 @@ public class User {
     public void setOrders(List<Orders> orders) {
         this.orders = orders;
     }
-
 
     public Integer getOrderCount() {
         return orderCount;
@@ -206,10 +175,10 @@ public class User {
     }
 
     public String getProfilePicture() {
-        return profileImageId; // Return profileImageId as the profile picture
+        return profileImageId;
     }
 
     public void setProfilePicture(String profilePicture) {
-        this.profileImageId = profilePicture; // Update profileImageId
+        this.profileImageId = profilePicture;
     }
 }

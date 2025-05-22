@@ -6,7 +6,6 @@ import com.web.tech.model.User;
 import com.web.tech.service.CartService;
 import com.web.tech.service.OrderService;
 import com.web.tech.service.UserService;
-import com.web.tech.impl.OrderServiceImpl;
 import com.web.tech.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 
 @Controller
 public class CheckoutController {
-    // Add logger
     private static final Logger logger = LoggerFactory.getLogger(CheckoutController.class);
 
     @Autowired
@@ -41,9 +39,6 @@ public class CheckoutController {
     @Autowired
     private NotificationService notificationService;
 
-    @Autowired
-    private OrderServiceImpl orderServiceImpl;
-
     @GetMapping("/checkout")
     public String viewCheckout(Model model, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
@@ -51,7 +46,7 @@ public class CheckoutController {
             return "redirect:/login";
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             logger.info("Checkout page accessed by user ID: {}", userId);
 
             Cart cart = cartService.getOrCreateCart(userId);
@@ -88,7 +83,7 @@ public class CheckoutController {
         }
 
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             logger.info("Processing order for user ID: {}", userId);
 
             Cart cart = cartService.getOrCreateCart(userId);
@@ -144,7 +139,7 @@ public class CheckoutController {
             return "error: Please log in";
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             orderService.cancelOrder(orderNumber, userId);
             return "success: Order cancelled successfully";
         } catch (IllegalArgumentException e) {
@@ -155,18 +150,9 @@ public class CheckoutController {
         }
     }
 
-    private Long getUserIdFromAuthentication(Authentication authentication) {
-        String email = authentication.getName();
-        User user = userService.findByEmail(email);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found for email: " + email);
-        }
-        return user.getId();
-    }
-
     @PostMapping("/orders/update-status")
     public String updateOrderStatus(
-            @RequestParam("orderId") Long orderId,
+            @RequestParam("orderId") String orderId,
             @RequestParam("status") String status,
             RedirectAttributes redirectAttributes) {
         try {
@@ -193,7 +179,7 @@ public class CheckoutController {
             logger.error("Unexpected error updating order id: {}", orderId, e);
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to update order status. Please try again.");
         }
-        return "redirect:admin/user/order-confirmation";
+        return "redirect:/admin/user/order-confirmation";
     }
 
     @GetMapping("/account/orders")
@@ -202,9 +188,8 @@ public class CheckoutController {
             return "redirect:/login";
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
-            List<Orders> orders = orderServiceImpl.getOrdersByUserId(userId);
-            // Create a list with formatted dates
+            String userId = getUserIdFromAuthentication(authentication);
+            List<Orders> orders = orderService.getOrdersByUserId(userId);
             List<Map<String, Object>> formattedOrders = orders.stream().map(order -> {
                 Map<String, Object> map = new HashMap<>();
                 map.put("orderNumber", order.getOrderNumber());
@@ -222,5 +207,14 @@ public class CheckoutController {
             logger.error("Error loading orders: {}", e.getMessage(), e);
             return "redirect:/login?error=Failed to load orders";
         }
+    }
+
+    private String getUserIdFromAuthentication(Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found for email: " + email);
+        }
+        return user.getId();
     }
 }

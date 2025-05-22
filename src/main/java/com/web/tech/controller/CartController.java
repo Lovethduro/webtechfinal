@@ -1,6 +1,7 @@
 package com.web.tech.controller;
 
 import com.web.tech.model.Cart;
+import com.web.tech.model.CartItem;
 import com.web.tech.model.Products;
 import com.web.tech.model.User;
 import com.web.tech.service.CartService;
@@ -8,11 +9,9 @@ import com.web.tech.service.ProductService;
 import com.web.tech.service.UserImageService;
 import com.web.tech.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,14 +58,13 @@ public class CartController {
             model.addAttribute("profilePicture", "/images/default-avatar.jpg");
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             Cart cart = cartService.getOrCreateCart(userId);
             User user = userService.getUserById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            // Prepare product images with full data URLs
-            Map<Long, String> productImageBase64 = new HashMap<>();
+            Map<String, String> productImageBase64 = new HashMap<>();
             cart.getItems().forEach(item -> {
-                Long productId = item.getProduct().getId();
+                String productId = item.getProduct().getId();
                 String image = productService.getProductImage(productId);
                 productImageBase64.put(productId, image);
             });
@@ -93,16 +91,15 @@ public class CartController {
 
     @PostMapping("/add")
     @ResponseBody
-    @Transactional
     public String addToCart(
-            @RequestParam Long productId,
+            @RequestParam String productId,
             @RequestParam(defaultValue = "1") int quantity,
             Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
             return "redirect:/login";
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             Products product = productService.getProductById(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
@@ -131,7 +128,7 @@ public class CartController {
             return 0;
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             return cartService.getCartCount(userId);
         } catch (IllegalArgumentException e) {
             System.err.println("Error getting cart count: " + e.getMessage());
@@ -141,17 +138,16 @@ public class CartController {
 
     @PostMapping("/update")
     @ResponseBody
-    @Transactional
     public String updateCartItem(
-            @RequestParam Long itemId,
-            @RequestParam Long productId,
+            @RequestParam String itemId,
+            @RequestParam String productId,
             @RequestParam int quantity,
             Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
             return "redirect:/login";
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             Cart cart = cartService.getOrCreateCart(userId);
             if (cart.getItems().stream().noneMatch(item -> item.getProduct().getId().equals(productId))) {
                 throw new IllegalArgumentException("Product not found in cart");
@@ -159,13 +155,11 @@ public class CartController {
             Products product = productService.getProductById(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Product not found"));
 
-            // Calculate current quantity in cart for this product
             int currentQuantity = cart.getItems().stream()
                     .filter(item -> item.getProduct().getId().equals(productId))
-                    .mapToInt(item -> item.getQuantity())
+                    .mapToInt(CartItem::getQuantity)
                     .sum();
 
-            // Calculate stock difference
             int stockDifference = quantity - currentQuantity;
             if (stockDifference > 0 && product.getStock() < stockDifference) {
                 return "error: Insufficient stock: only " + product.getStock() + " items left";
@@ -187,27 +181,24 @@ public class CartController {
 
     @PostMapping("/remove")
     @ResponseBody
-    @Transactional
     public String removeCartItem(
-            @RequestParam Long itemId,
-            @RequestParam Long productId,
+            @RequestParam String itemId,
+            @RequestParam String productId,
             Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() instanceof String) {
             return "redirect:/login";
         }
         try {
-            Long userId = getUserIdFromAuthentication(authentication);
+            String userId = getUserIdFromAuthentication(authentication);
             Cart cart = cartService.getOrCreateCart(userId);
             if (cart.getItems().stream().noneMatch(item -> item.getProduct().getId().equals(productId))) {
                 throw new IllegalArgumentException("Product not found in cart");
             }
-            // Get quantity being removed
             int removedQuantity = cart.getItems().stream()
                     .filter(item -> item.getProduct().getId().equals(productId))
-                    .mapToInt(item -> item.getQuantity())
+                    .mapToInt(CartItem::getQuantity)
                     .sum();
             cart.removeProduct(productId);
-            // Restore stock
             Products product = productService.getProductById(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Product not found"));
             product.setStock(product.getStock() + removedQuantity);
@@ -222,7 +213,7 @@ public class CartController {
         }
     }
 
-    private Long getUserIdFromAuthentication(Authentication authentication) {
+    private String getUserIdFromAuthentication(Authentication authentication) {
         String email = authentication.getName();
         System.out.println("Email: " + email);
         User user = userService.findByEmail(email);

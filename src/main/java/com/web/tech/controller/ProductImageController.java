@@ -41,7 +41,6 @@ public class ProductImageController {
         }
     }
 
-
     @GetMapping("/{productId}")
     public ResponseEntity<byte[]> getImage(@PathVariable String productId) {
         if (productId == null || productId.trim().isEmpty()) {

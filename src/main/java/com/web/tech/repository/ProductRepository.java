@@ -3,15 +3,13 @@ package com.web.tech.repository;
 import com.web.tech.model.Products;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
-public interface ProductRepository extends JpaRepository<Products, Long> {
+public interface ProductRepository extends MongoRepository<Products, String> {
 
     List<Products> findByNameContainingIgnoreCase(String name);
 
@@ -27,21 +25,17 @@ public interface ProductRepository extends JpaRepository<Products, Long> {
     Page<Products> findByNameContainingIgnoreCaseAndPriceBetween(
             String name, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 
-    // Optional: Custom query for flexibility
-    @Query("SELECT p FROM Products p WHERE " +
-            "(:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
-            "(:maxPrice IS NULL OR p.price <= :maxPrice)")
+    @Query("{$and: [" +
+            "{ $or: [ { name: { $regex: ?0, $options: 'i' } }, { name: null } ] }," +
+            "{ $or: [ { price: { $gte: ?1 } }, { price: null } ] }," +
+            "{ $or: [ { price: { $lte: ?2 } }, { price: null } ] }" +
+            "]}")
     Page<Products> findByNameAndPriceRange(
-            @Param("name") String name,
-            @Param("minPrice") BigDecimal minPrice,
-            @Param("maxPrice") BigDecimal maxPrice,
-            Pageable pageable);
+            String name, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 
-    @Query("SELECT p.category AS category, COUNT(p) AS count FROM Products p GROUP BY p.category")
-    List<Object[]> getArtworksByCategory();
+    @Query(value = "{ 'category': ?0 }", count = true)
+    Long countByCategory(String category);
 
-    @Query("SELECT COUNT(p) FROM Products p WHERE p.stock <= :stock")
-    Long countByStockLessThanEqual(@Param("stock") int stock);
-
+    @Query("{ stock: { $lte: ?0 } }")
+    Long countByStockLessThanEqual(int stock);
 }

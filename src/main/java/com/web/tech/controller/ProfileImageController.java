@@ -40,7 +40,7 @@ public class ProfileImageController {
         }
 
         try {
-            userImageService.updateImage(user.getId().toString(), file);
+            userImageService.updateImage(user.getId(), file);
             redirectAttributes.addFlashAttribute("successMessage", "Profile image updated successfully");
         } catch (IOException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to update image: " + e.getMessage());

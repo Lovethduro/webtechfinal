@@ -29,7 +29,6 @@ public class ProductImageService {
         return productImageRepository.findByProductId(productId);
     }
 
-
     public void deleteImage(String productId) throws IOException {
         Optional<ProductImages> imageOptional = productImageRepository.findByProductId(productId);
         if (imageOptional.isPresent()) {
@@ -40,7 +39,6 @@ public class ProductImageService {
             }
         }
     }
-
 
     public String getProductImageBase64(String productId) {
         Optional<ProductImages> imageOptional = productImageRepository.findByProductId(productId);
@@ -54,13 +52,12 @@ public class ProductImageService {
     public String getProductImageContentType(String productId) {
         return productImageRepository.findByProductId(productId)
                 .map(ProductImages::getContentType)
-                .orElse("image/png"); // default if not found
+                .orElse("image/png");
     }
 
-
-    public String getProductImage(Long productId) {
-        String base64 = getProductImageBase64(String.valueOf(productId));
-        String contentType = getProductImageContentType(String.valueOf(productId));
+    public String getProductImage(String productId) {
+        String base64 = getProductImageBase64(productId);
+        String contentType = getProductImageContentType(productId);
         return (base64 != null && contentType != null) ?
                 "data:" + contentType + ";base64," + base64 :
                 "/images/default-product.jpg";

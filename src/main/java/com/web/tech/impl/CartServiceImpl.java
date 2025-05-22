@@ -1,6 +1,7 @@
 package com.web.tech.impl;
 
 import com.web.tech.model.Cart;
+import com.web.tech.model.CartItem;
 import com.web.tech.model.Products;
 import com.web.tech.model.User;
 import com.web.tech.repository.CartRepository;
@@ -9,7 +10,6 @@ import com.web.tech.service.ProductService;
 import com.web.tech.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -24,8 +24,7 @@ public class CartServiceImpl implements CartService {
     private ProductService productService;
 
     @Override
-    @Transactional
-    public Cart getOrCreateCart(Long userId) {
+    public Cart getOrCreateCart(String userId) {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     User user = userService.getUserById(userId)
@@ -36,8 +35,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @Transactional
-    public void addToCart(Long userId, Long productId, int quantity) {
+    public void addToCart(String userId, String productId, int quantity) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be positive");
         }
@@ -49,22 +47,20 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public long getCartCount(Long userId) {
+    public long getCartCount(String userId) {
         return cartRepository.findByUserId(userId)
-                .map(cart -> cart.getItems().stream().mapToLong(item -> item.getQuantity()).sum())
+                .map(cart -> cart.getItems().stream().mapToLong(CartItem::getQuantity).sum())
                 .orElse(0L);
     }
 
     @Override
-    @Transactional
-    public void clearCart(Long userId) {
+    public void clearCart(String userId) {
         Cart cart = getOrCreateCart(userId);
         cart.clear();
         cartRepository.save(cart);
     }
 
     @Override
-    @Transactional
     public void saveCart(Cart cart) {
         cartRepository.save(cart);
     }

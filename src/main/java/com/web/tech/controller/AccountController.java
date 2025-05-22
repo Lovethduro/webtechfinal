@@ -33,8 +33,8 @@ public class AccountController {
         User user = userService.findByEmail(auth.getName());
         model.addAttribute("user", user);
 
-        String profilePicture = userImageService.getProfileImageBase64(user.getId().toString());
-        String contentType = userImageService.getProfileImageContentType(user.getId().toString());
+        String profilePicture = userImageService.getProfileImageBase64(user.getId());
+        String contentType = userImageService.getProfileImageContentType(user.getId());
         model.addAttribute("profilePicture",
                 profilePicture != null ? "data:" + contentType + ";base64," + profilePicture : "/images/default-avatar.jpg");
 
@@ -48,10 +48,7 @@ public class AccountController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User user = userService.findByEmail(auth.getName());
-
-            // Use your existing service method
-            userImageService.updateImage(user.getId().toString(), file);
-
+            userImageService.updateImage(user.getId(), file);
             redirectAttributes.addFlashAttribute("successMessage", "Profile picture updated successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to upload profile picture: " + e.getMessage());
@@ -66,7 +63,6 @@ public class AccountController {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             User currentUser = userService.findByEmail(auth.getName());
 
-            // Update only the allowed fields
             currentUser.setFirstName(updatedUser.getFirstName());
             currentUser.setLastName(updatedUser.getLastName());
             currentUser.setPhone(updatedUser.getPhone());

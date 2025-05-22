@@ -3,18 +3,16 @@ package com.web.tech.repository;
 import com.web.tech.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends MongoRepository<User, String> {
 
-    @Query(value = "SELECT COUNT(*) > 0 FROM clients WHERE email = :email", nativeQuery = true)
-    boolean existsByEmail(@Param("email") String email);
+    boolean existsByEmail(String email);
 
-    Optional<User> findByEmailIgnoreCase(@Param("email") String email);
+    Optional<User> findByEmailIgnoreCase(String email);
 
     boolean existsByPhone(String phone);
 
@@ -22,21 +20,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findByPhone(String phone);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))")
-    Page<User> findByNameOrEmail(@Param("query") String query, Pageable pageable);
+    @Query("{$or: [{firstName: {$regex: ?0, $options: 'i'}}, {lastName: {$regex: ?0, $options: 'i'}}, {email: {$regex: ?0, $options: 'i'}}]}")
+    Page<User> findByNameOrEmail(String query, Pageable pageable);
 
-    @Query("SELECT u FROM User u WHERE u.role <> :role")
-    Page<User> findByRolesNotContaining(@Param("role") String role, Pageable pageable);
+    @Query("{role: {$ne: ?0}}")
+    Page<User> findByRolesNotContaining(String role, Pageable pageable);
 
-    @Query("SELECT u FROM User u WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))) AND u.role <> :role")
-    Page<User> findByNameOrEmailAndRolesNotContaining(@Param("query") String query, @Param("role") String role, Pageable pageable);
+    @Query("{$and: [{$or: [{firstName: {$regex: ?0, $options: 'i'}}, {lastName: {$regex: ?0, $options: 'i'}}, {email: {$regex: ?0, $options: 'i'}}]}, {role: {$ne: ?1}}]}")
+    Page<User> findByNameOrEmailAndRolesNotContaining(String query, String role, Pageable pageable);
 
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role <> :role")
-    Long countByRoleNot(@Param("role") String role);
-
-
+    @Query(value = "{role: {$ne: ?0}}", count = true)
+    Long countByRoleNot(String role);
 }

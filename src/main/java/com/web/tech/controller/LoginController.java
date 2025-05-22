@@ -29,15 +29,13 @@ public class LoginController {
     private final AuthenticationManager authenticationManager;
 
     @Autowired
-    public LoginController(UserService userService,
-                           AuthenticationManager authenticationManager) {
+    public LoginController(UserService userService, AuthenticationManager authenticationManager) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
     }
 
     @GetMapping("/login")
     public String showLoginPage(Model model, HttpServletRequest request) {
-        // Force logout of any current user
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.removeAttribute("user");
@@ -49,15 +47,12 @@ public class LoginController {
             }
         }
 
-        // Clear security context
         SecurityContextHolder.clearContext();
 
-        // Handle logout request
         if (request.getParameter("logout") != null) {
             model.addAttribute("logoutMessage", "You have been successfully logged out");
         }
 
-        // Handle error message if present
         if (request.getParameter("error") != null) {
             model.addAttribute("errorMessage", "Invalid credentials");
         }
@@ -111,7 +106,6 @@ public class LoginController {
             }
             session = request.getSession(true);
 
-            // Persist security context to session
             session.setAttribute("SPRING_SECURITY_CONTEXT", SecurityContextHolder.getContext());
 
             User sessionUser = new User();

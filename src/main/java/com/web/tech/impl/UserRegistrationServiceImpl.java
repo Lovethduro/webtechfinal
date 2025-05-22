@@ -7,44 +7,34 @@ import com.web.tech.repository.UserRepository;
 import com.web.tech.service.UserRegistrationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 
 @Service
 public class UserRegistrationServiceImpl implements UserRegistrationService {
     private static final Logger logger = LoggerFactory.getLogger(UserRegistrationServiceImpl.class);
-    private final UserRepository userRepository;
-    private final UserImageRepository userImageRepository;
 
+    @Autowired
+    private UserRepository userRepository;
 
-    // Explicit constructor for dependency injection
-    public UserRegistrationServiceImpl(UserRepository userRepository,
-                                       UserImageRepository userImageRepository
-                                       ) {
-        this.userRepository = userRepository;
-        this.userImageRepository = userImageRepository;
-
-    }
+    @Autowired
+    private UserImageRepository userImageRepository;
 
     @Override
-    @Transactional
     public User registerUser(User user, MultipartFile profileImage) throws IOException {
         logger.debug("Starting user registration...");
-
-
 
         logger.debug("Saving user to database...");
         User savedUser = userRepository.save(user);
         logger.debug("Saved user with ID: {}", savedUser.getId());
 
-        // 2. Handle image
-        if (!profileImage.isEmpty()) {
+        if (profileImage != null && !profileImage.isEmpty()) {
             logger.debug("Processing profile image...");
             UserImage userImage = new UserImage();
-            userImage.setUserId(savedUser.getId().toString());
+            userImage.setUserId(savedUser.getId());
             userImage.setImageData(profileImage.getBytes());
             userImage.setContentType(profileImage.getContentType());
 

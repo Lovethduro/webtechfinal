@@ -24,7 +24,6 @@ public class UserController {
     private final UserService userService;
     private final UserImageService userImageService;
 
-    // Validation patterns
     private static final String PHONE_REGEX = "^\\+?[0-9]{10,15}$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
     private static final String PASSWORD_REGEX = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,20}$";
@@ -48,14 +47,12 @@ public class UserController {
             @RequestParam("profileImage") MultipartFile profileImage,
             RedirectAttributes redirectAttributes) {
 
-        // 1. Email validation
         if (userService.emailExists(user.getEmail())) {
             result.rejectValue("email", "error.user", "This email is already registered");
         } else if (!Pattern.matches(EMAIL_REGEX, user.getEmail())) {
             result.rejectValue("email", "error.user", "Please enter a valid email address");
         }
 
-        // 2. Password validation
         if (!user.getPassword().equals(user.getConfirmPassword())) {
             result.rejectValue("confirmPassword", "error.user", "Passwords do not match");
         } else if (!Pattern.matches(PASSWORD_REGEX, user.getPassword())) {
@@ -63,7 +60,6 @@ public class UserController {
                     "Password must be 8-20 characters with at least one digit, lowercase, uppercase, and special character");
         }
 
-        // 3. Phone number validation
         if (user.getPhone() != null && !user.getPhone().isEmpty()) {
             if (!Pattern.matches(PHONE_REGEX, user.getPhone())) {
                 result.rejectValue("phone", "error.user",
@@ -74,9 +70,8 @@ public class UserController {
             }
         }
 
-        // 4. Profile image validation
         if (!profileImage.isEmpty()) {
-            if (profileImage.getSize() > 5 * 1024 * 1024) { // 5MB limit
+            if (profileImage.getSize() > 5 * 1024 * 1024) {
                 result.rejectValue("profileImage", "error.user",
                         "Profile image must be less than 5MB");
             }
@@ -93,13 +88,11 @@ public class UserController {
         }
 
         try {
-            // Save user
             User savedUser = userService.save(user);
 
-            // Save profile image if provided
             if (!profileImage.isEmpty()) {
                 UserImage userImage = userImageService.saveImage(
-                        savedUser.getId().toString(),
+                        savedUser.getId(),
                         profileImage
                 );
                 savedUser.setProfileImageId(userImage.getId());
@@ -124,6 +117,4 @@ public class UserController {
                         .body(userImage.getImageData()))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
-
-
 }

@@ -3,7 +3,6 @@ package com.web.tech.controller;
 import com.web.tech.model.Orders;
 import com.web.tech.model.Products;
 import com.web.tech.model.User;
-import com.web.tech.model.Products;
 import com.web.tech.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -70,7 +69,6 @@ public class AdminController {
             return "redirect:/shop";
         }
 
-        // Dashboard statistics
         Long productCount = productService.countAllArtworks();
         Long outOfStockCount = productService.countOutOfStock();
         Long customerCount = productService.countAllClients();
@@ -97,10 +95,9 @@ public class AdminController {
         return "admin";
     }
 
-
     @PostMapping("/products/{id}/stock")
     public String updateStock(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @RequestParam("stock") int stock,
             RedirectAttributes redirectAttributes) {
         try {
@@ -130,7 +127,7 @@ public class AdminController {
     }
 
     @PostMapping("/notifications/mark-read")
-    public String markNotificationRead(@RequestParam("notificationId") Long notificationId) {
+    public String markNotificationRead(@RequestParam("notificationId") String notificationId) {
         notificationService.markAsRead(notificationId);
         return "redirect:/admin";
     }
@@ -148,7 +145,7 @@ public class AdminController {
 
     @PostMapping("/delete/client/{id}")
     public String deleteClient(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             RedirectAttributes redirectAttributes) {
         try {
             User client = userService.findById(id);
@@ -193,7 +190,7 @@ public class AdminController {
 
     @PostMapping("/orders/update-status")
     public String updateOrderStatus(
-            @RequestParam("orderId") Long orderId,
+            @RequestParam("orderId") String orderId,
             @RequestParam("status") String status,
             RedirectAttributes redirectAttributes) {
         try {

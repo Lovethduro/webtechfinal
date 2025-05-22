@@ -1,13 +1,12 @@
 package com.web.tech.controller;
 
-import com.web.tech.model.Clients;
 import com.web.tech.model.Products;
 import com.web.tech.model.User;
 import com.web.tech.service.NotificationService;
 import com.web.tech.service.ProductImageService;
 import com.web.tech.service.ProductService;
-import jakarta.validation.Valid;
 import com.web.tech.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -36,7 +34,8 @@ public class ProductController {
     private final NotificationService notificationService;
 
     @Autowired
-    public ProductController(ProductService productService, ProductImageService productImageService, UserService userService, NotificationService notificationService ) {
+    public ProductController(ProductService productService, ProductImageService productImageService,
+                             UserService userService, NotificationService notificationService) {
         this.productService = productService;
         this.productImageService = productImageService;
         this.userService = userService;
@@ -112,7 +111,7 @@ public class ProductController {
 
     @PostMapping("/products/delete/{id}")
     public String deleteProduct(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             RedirectAttributes redirectAttributes) {
         try {
             productService.deleteProduct(id);
@@ -137,7 +136,7 @@ public class ProductController {
     }
 
     @GetMapping("/products/edit/{id}")
-    public String editArtworkForm(@PathVariable Long id, Model model) {
+    public String editArtworkForm(@PathVariable String id, Model model) {
         Optional<Products> productOpt = productService.getProductById(id);
         if (productOpt.isEmpty()) {
             return "redirect:/admin/artworks?error=Artwork not found";
@@ -150,7 +149,7 @@ public class ProductController {
 
     @PostMapping("/products/edit/{id}")
     public String updateArtwork(
-            @PathVariable Long id,
+            @PathVariable String id,
             @Valid @ModelAttribute("product") Products product,
             BindingResult bindingResult,
             @RequestParam(value = "image", required = false) MultipartFile imageFile,
@@ -193,8 +192,8 @@ public class ProductController {
                     return "admin/products/edit";
                 }
 
-                productImageService.deleteImage(String.valueOf(id));
-                productImageService.saveImage(String.valueOf(id), imageFile);
+                productImageService.deleteImage(id);
+                productImageService.saveImage(id, imageFile);
             } catch (IOException e) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Failed to upload image: " + e.getMessage());
                 return "redirect:/admin/products/edit/" + id;
@@ -210,7 +209,4 @@ public class ProductController {
             return "redirect:/admin/products/edit/" + id;
         }
     }
-
-
-
 }

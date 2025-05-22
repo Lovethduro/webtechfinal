@@ -1,11 +1,11 @@
 package com.web.tech.controller;
 
 import com.web.tech.model.User;
+import com.web.tech.model.Products;
 import com.web.tech.service.ProductImageService;
 import com.web.tech.service.UserImageService;
 import com.web.tech.service.UserService;
 import com.web.tech.service.ProductService;
-import com.web.tech.model.Products;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -46,7 +46,6 @@ public class ShopController {
             @PageableDefault(size = 10) Pageable pageable,
             Model model) {
 
-        // Handle user authentication and profile picture
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
             Optional<User> userOptional = Optional.ofNullable(userService.findByEmail(auth.getName().toLowerCase()));
@@ -69,15 +68,13 @@ public class ShopController {
         }
 
         try {
-            // Search products with the given criteria
             Page<Products> products = productService.searchProducts(name, minPrice, maxPrice, pageable);
             model.addAttribute("products", products);
 
-            // Handle product images
-            Map<Long, String> productImages = new HashMap<>();
+            Map<String, String> productImages = new HashMap<>();
             for (Products product : products.getContent()) {
-                String imageBase64 = productImageService.getProductImageBase64(product.getId().toString());
-                String contentType = productImageService.getProductImageContentType(product.getId().toString());
+                String imageBase64 = productImageService.getProductImageBase64(product.getId());
+                String contentType = productImageService.getProductImageContentType(product.getId());
                 productImages.put(product.getId(),
                         imageBase64 != null && contentType != null
                                 ? "data:" + contentType + ";base64," + imageBase64
@@ -87,15 +84,13 @@ public class ShopController {
 
         } catch (IllegalArgumentException e) {
             model.addAttribute("errorMessage", e.getMessage());
-            // Return all products if there's an error in search parameters
             Page<Products> products = productService.getAllProducts(pageable);
             model.addAttribute("products", products);
 
-            // Handle product images for fallback case
-            Map<Long, String> productImages = new HashMap<>();
+            Map<String, String> productImages = new HashMap<>();
             for (Products product : products.getContent()) {
-                String imageBase64 = productImageService.getProductImageBase64(product.getId().toString());
-                String contentType = productImageService.getProductImageContentType(product.getId().toString());
+                String imageBase64 = productImageService.getProductImageBase64(product.getId());
+                String contentType = productImageService.getProductImageContentType(product.getId());
                 productImages.put(product.getId(),
                         imageBase64 != null && contentType != null
                                 ? "data:" + contentType + ";base64," + imageBase64
@@ -107,6 +102,4 @@ public class ShopController {
         model.addAttribute("pageTitle", "Shop Artworks");
         return "admin/user/shop";
     }
-
-
 }

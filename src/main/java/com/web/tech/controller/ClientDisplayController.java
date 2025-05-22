@@ -76,10 +76,9 @@ public class ClientDisplayController {
         return "admin/products/clients";
     }
 
-
     @GetMapping("/edit/{id}")
     public String showEditForm(
-            @PathVariable("id") Long id,
+            @PathVariable("id") String id,
             @RequestParam(value = "query", required = false, defaultValue = "") String query,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
@@ -96,7 +95,6 @@ public class ClientDisplayController {
         model.addAttribute("currentPage", "clients");
         return "admin/products/edit-client";
     }
-
 
     @PostMapping("/editUser")
     public String editClient(
@@ -136,31 +134,5 @@ public class ClientDisplayController {
         }
 
         return "redirect:/admin/clients?query=" + URLEncoder.encode(query, StandardCharsets.UTF_8) + "&page=" + page + "&size=" + size + "&sort=" + sort;
-    }
-
-    private String getSortField(String sort) {
-        switch (sort) {
-            case "name-desc":
-                return "lastName";
-            case "email-asc":
-            case "email-desc":
-                return "email";
-            case "createdAt-asc":
-            case "createdAt-desc":
-                return "createdAt";
-            default:
-                return "lastName";
-        }
-    }
-
-    private Sort.Direction getSortDirection(String sort) {
-        switch (sort) {
-            case "name-desc":
-            case "email-desc":
-            case "createdAt-desc":
-                return Sort.Direction.DESC;
-            default:
-                return Sort.Direction.ASC;
-        }
     }
 }

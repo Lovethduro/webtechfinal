@@ -6,7 +6,6 @@ import com.web.tech.repository.NotificationRepository;
 import com.web.tech.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,7 +16,6 @@ public class NotificationServiceImpl implements NotificationService {
     private NotificationRepository notificationRepository;
 
     @Override
-    @Transactional
     public Notification createNotification(String title, String message, String type, User user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null for notification");
@@ -37,8 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
-    public void markAsRead(Long notificationId) {
+    public void markAsRead(String notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
         notification.setRead(true);
@@ -46,7 +43,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
     public void markAllAsRead(User user) {
         List<Notification> unreadNotifications = notificationRepository.findByUserAndIsReadFalse(user);
         unreadNotifications.forEach(notification -> notification.setRead(true));

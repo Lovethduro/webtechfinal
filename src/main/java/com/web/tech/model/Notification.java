@@ -1,36 +1,30 @@
 package com.web.tech.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "notifications")
+@Document(collection = "notifications")
 public class Notification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
     private String message;
 
-    @Column(nullable = false)
     private String type;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
     private boolean isRead;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @DBRef
     private User user;
 
-    // Constructors
     public Notification() {
         this.createdAt = LocalDateTime.now();
         this.isRead = false;
@@ -55,8 +49,8 @@ public class Notification {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public String getMessage() { return message; }
