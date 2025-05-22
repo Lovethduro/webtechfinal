@@ -2,6 +2,7 @@ package com.web.tech.impl;
 
 import com.web.tech.model.User;
 import com.web.tech.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 @Service
+@Qualifier
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
