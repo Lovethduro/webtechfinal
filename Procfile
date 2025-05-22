@@ -1,1 +1,1 @@
-web: java -Dserver.port=$PORT -Xmx400m -Xss512k -XX:CICompilerCount=2 -Dspring.profiles.active=production $JAVA_OPTS -jar target/tech-0.0.1-SNAPSHOT.jar
+web: java -Dserver.port=$PORT -Dserver.address=0.0.0.0 -Xmx400m -Xss512k -XX:CICompilerCount=2 -Dspring.profiles.active=production $JAVA_OPTS -jar target/tech-0.0.1-SNAPSHOT.jar
