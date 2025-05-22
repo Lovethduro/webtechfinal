@@ -5,18 +5,17 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.env.Environment;
 
 @SpringBootApplication
 @ComponentScan(basePackages = "com.web.tech")
 public class TechApplication {
 
 	public static void main(String[] args) {
-		// Explicitly set the port from environment variable
+		// Explicitly set the port from environment variable (Heroku's $PORT)
 		String port = System.getenv("PORT");
 		if (port != null && !port.isEmpty()) {
 			System.setProperty("server.port", port);
-			System.out.println("Binding to port: " + port);  // Log the port to confirm
+			System.out.println("Binding to Heroku port: " + port);  // Log the port to confirm
 		}
 		SpringApplication.run(TechApplication.class, args);
 	}
