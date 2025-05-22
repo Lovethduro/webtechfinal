@@ -20,6 +20,12 @@ public class TechApplication {
 	private String serverPort;
 
 	public static void main(String[] args) {
+		// Explicitly set the port from environment variable
+		String port = System.getenv("PORT");
+		if (port != null && !port.isEmpty()) {
+			System.setProperty("server.port", port);
+			System.out.println("Setting server port to: " + port);
+		}
 		SpringApplication.run(TechApplication.class, args);
 	}
 
